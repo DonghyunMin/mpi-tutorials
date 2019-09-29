@@ -36,3 +36,53 @@ HYDRA build details:
     F77:                             gfortran   
     F90:                             gfortran
 ```
+
+### 3. MPI Hello, World!
+프로그래밍을 처음 배울 때 가장 먼저 하는 것이 `Hello, World!`를 출력하는 일입니다. 이번에는 MPI 프로그래밍을 배우기 전에 간단한 프로그램 하나를 작성하고 컴파일 하는 방법에 대해 다룹니다.
+
+```c
+// main.c
+#include <mpi.h>
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    // Initialize the MPI environment
+    MPI_Init(NULL, NULL);
+
+    // Get the number of processes
+    int world_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+    // Get the rank of the process
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+    // Get the name of the processor
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+    int name_len;
+    MPI_Get_processor_name(processor_name, &name_len);
+
+    // Print off a hello world message
+    printf("Hello world from processor %s, rank %d out of %d processors\n",
+           processor_name, world_rank, world_size);
+
+    // Finalize the MPI environment.
+    MPI_Finalize();
+}
+```
+
+위 예제는 [이 링크](https://github.com/wesleykendall/mpitutorial/blob/gh-pages/tutorials/mpi-hello-world/code/mpi_hello_world.c) 에서 가져 온 예제입니다. 이 예제는 로컬 컴퓨터의 `rank`, `그룹 크기`, `프로세서 이름`를 출력합니다.
+
+#### 컴파일
+제가 사용하고 있는 Mac 운영체제에서는 C로 작성된 프로그램을 컴파일 하기 위해서 `gcc`, `clang`같은 명령어를 사용할 수 있는데요 MPI를 사용하는 코드에서는 위 컴파일러를 사용하면 에러가 발생합니다. 우리는 위 명령어 대신 `mpicc`명령어를 사용해서 컴파일 해야 합니다.
+
+```sh
+$ mpicc -o main main.c
+$ ./main
+
+Hello world from processor <processor-name>, rank 0 out of 1 processors
+```
+
+컴파일 하고 프로그램을 실행하면 프로세서 이름과 rank, 그룹 크기가 출력 되는데요. MPI는 프로세서들을 논리적으로 그룹화 하고 있습니다. 출력 결과를 해석하면 그 그룹안에 포함된 프로세서의 개수는 한 개 이고 해당 프로세서의 rank는 0번이라는 의미입니다.
+
+`rank`란 프로세서를 식별하는 식별자입니다. 프로세서가 16개가 연결되어 있다면 각 프로세서는 `0~15번`의 rank를 가지게 됩니다. 이 중 0번 rank가 부모(Master) 프로세서의 역할을 가지며 자식(Slave) 프로세서에게 메시지를 전달합니다.
